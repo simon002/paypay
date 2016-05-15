@@ -184,14 +184,15 @@ void CookieProcess::setExplorer(CExplorer1* _explorer)
 DWORD WINAPI cookieProcessThread(LPVOID lpParamter)
 {
 	CookieProcess* cookieProcess = (CookieProcess*)lpParamter;
+	DWORD start = GetTickCount();
+	DWORD end = GetTickCount();
 	while(true)
 	{
-        if (cookieProcess->getCanVisit())
+		if (cookieProcess->getCanVisit())
 		{
 			WaitForSingleObject(hMutex, INFINITE);
 			if (cookieProcess->getUseProxy().size() > 0)
 			{
-				
 				std::wstring proxy = cookieProcess->getUseProxy().front();
 				std::wstring msg = L"通过代理" + proxy + L"cookie";
 				cookieProcess->getPayDlg()->addLogMsg(proxy.c_str());
@@ -199,12 +200,17 @@ DWORD WINAPI cookieProcessThread(LPVOID lpParamter)
 				cookieProcess->setProxy(const_cast<LPWSTR>(proxy.c_str()));
 				cookieProcess->setCanVisit(false);
 				cookieProcess->visitExplorerByProxy();
-				
+				start = GetTickCount();
 			}
 			ReleaseMutex(hMutex);
 
 		}
-		
+		end = GetTickCount();
+		if (end - start > 3*60*1000)
+		{
+			cookieProcess->setCanVisit(true);
+		}
+		Sleep(1000);
 	}
 	return 1;
 }

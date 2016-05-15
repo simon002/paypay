@@ -782,7 +782,10 @@ DWORD WINAPI execute(LPVOID lpParamter)
 				WaitForSingleObject(cookieMutex, INFINITE);
 				if (CookieProcess::proxyCookieQueue.size() > 0)
 				{
-					CookieProcess::proxyCookieQueue.pop();
+					if (CookieProcess::proxyCookieQueue.front().cookie == pc.cookie)
+					{
+						CookieProcess::proxyCookieQueue.pop();
+					}
 				}
 				ReleaseMutex(cookieMutex);
 			}
@@ -1291,7 +1294,7 @@ DWORD WINAPI execute_daili(LPVOID lpParamter)
 void CPaypayDlg::OnBnClickedButton2()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	
+	SetTimer(10,60000,NULL);
 	HANDLE hSignalThread = CreateThread(NULL, 0, execute_daili, (LPVOID)this, 0, NULL);
 	g_begin_time = GetTickCount();
 	//if (!initDaiLi())
@@ -1916,6 +1919,10 @@ void CPaypayDlg::OnTimer(UINT_PTR nIDEvent)
 			wstring saved_path = wstring(szFilePath) + wstring(L"unUsedDaili.txt");
 			DeleteFile(saved_path.c_str());
 		}
+	}
+	else if (nIDEvent == 10)
+	{
+		//m_iee.Refresh();
 	}
 }
 
