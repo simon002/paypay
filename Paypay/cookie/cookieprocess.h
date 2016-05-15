@@ -28,6 +28,7 @@ public:
 	bool getFirst(){return m_first;}
 	void setFirst(bool _first){m_first = _first;}
 	void setPayDlg(CPaypayDlg* _payDlg);
+	void stopAllThread();
 	CPaypayDlg* getPayDlg();
 	static std::queue<ProxyCookie> proxyCookieQueue;
 private:

