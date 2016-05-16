@@ -11,7 +11,7 @@ HANDLE cookieMutex = CreateMutex(NULL,FALSE,NULL);
 extern HANDLE hMutex;
 extern unsigned int g_proxy_index;
 extern std::vector<std::wstring> g_all_daili;
-std::queue<ProxyCookie> CookieProcess::proxyCookieQueue;
+std::deque<ProxyCookie> CookieProcess::proxyCookieQueue;
 CookieProcess::CookieProcess():
 m_can_visit(true),
 m_first(true)
@@ -110,6 +110,8 @@ void CookieProcess::visitExplorerCallBack(LPDISPATCH pDisp, VARIANT FAR* URL)
 		strUrl != "https://connect.secure.wellsfargo.com/auth/login/do")
 		return;
 
+	try
+	{
 	IHTMLDocument2   *objDocument=NULL;
 	CComPtr<IHTMLElement> m_pBody;
 	CComBSTR bstrHTMLText;
@@ -166,13 +168,19 @@ retry:
 		ProxyCookie pc;
 		pc.cookie = cookie;
 		pc.proxy = m_proxy_address;
-		proxyCookieQueue.push(pc);
+		proxyCookieQueue.push_front(pc);
 		setCanVisit(true);
 		ReleaseMutex(cookieMutex);
 	}
 	if (strUrl =="https://connect.secure.wellsfargo.com/auth/login/do" && cookie.size() == 0 )
 	{
 		setCanVisit(true);
+	}
+	}
+	catch (...)
+	{
+		setCanVisit(true);
+		return;
 	}
 }
 
@@ -196,7 +204,7 @@ DWORD WINAPI cookieProcessThread(LPVOID lpParamter)
 				std::wstring proxy = cookieProcess->getUseProxy().front();
 				std::wstring msg = L"通过代理" + proxy + L"cookie";
 				cookieProcess->getPayDlg()->addLogMsg(proxy.c_str());
-				cookieProcess->getUseProxy().pop();
+				cookieProcess->getUseProxy().pop_front();
 				cookieProcess->setProxy(const_cast<LPWSTR>(proxy.c_str()));
 				cookieProcess->setCanVisit(false);
 				cookieProcess->visitExplorerByProxy();
@@ -206,7 +214,7 @@ DWORD WINAPI cookieProcessThread(LPVOID lpParamter)
 
 		}
 		end = GetTickCount();
-		if (end - start > 3*60*1000)
+		if (end - start > 2*60*1000)
 		{
 			cookieProcess->setCanVisit(true);
 		}
@@ -221,7 +229,7 @@ void CookieProcess::doGetCookie()
 
 }
 
-std::queue<std::wstring>& CookieProcess::getUseProxy()
+std::deque<std::wstring>& CookieProcess::getUseProxy()
 {
 	return m_can_use_proxy;
 }
@@ -231,6 +239,12 @@ DWORD WINAPI proxyProcessThread(LPVOID lpParamter)
 	while(true)
 	{
 		CookieProcess* cookieProcess = (CookieProcess*)lpParamter;
+		if (g_proxy_index >= g_all_daili.size())
+		{
+			Sleep(3000);
+			g_proxy_index = 0;
+			continue;
+		}
 		WaitForSingleObject(hMutex, INFINITE);
 		std::wstring proxy = g_all_daili[g_proxy_index];
 		g_proxy_index++;
@@ -251,13 +265,13 @@ DWORD WINAPI proxyProcessThread(LPVOID lpParamter)
 		else
 		{
 			WaitForSingleObject(hMutex, INFINITE);
-			cookieProcess->getUseProxy().push(proxy);
-			ReleaseMutex(hMutex);
+			cookieProcess->getUseProxy().push_front(proxy);	
 			if (cookieProcess->getFirst())
 			{
 				cookieProcess->doGetCookie();
 				cookieProcess->setFirst(false);
-			}
+			}	
+			ReleaseMutex(hMutex);
 		}
 	}
 	return 0;

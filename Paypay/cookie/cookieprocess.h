@@ -24,13 +24,13 @@ public:
 	bool getCanVisit(){return m_can_visit;}
 	void setCanVisit(bool _can_visit){m_can_visit = _can_visit;}
 	std::wstring getProxy(){return m_proxy_address;}
-	std::queue<std::wstring>& getUseProxy();
+	std::deque<std::wstring>& getUseProxy();
 	bool getFirst(){return m_first;}
 	void setFirst(bool _first){m_first = _first;}
 	void setPayDlg(CPaypayDlg* _payDlg);
 	void stopAllThread();
 	CPaypayDlg* getPayDlg();
-	static std::queue<ProxyCookie> proxyCookieQueue;
+	static std::deque<ProxyCookie> proxyCookieQueue;
 private:
 	CExplorer1* m_explorer;
 	CString m_cookie;
@@ -38,5 +38,5 @@ private:
 	bool m_can_visit;
 	bool m_first;
 	CPaypayDlg* m_payDlg;
-	std::queue<std::wstring> m_can_use_proxy;
+	std::deque<std::wstring> m_can_use_proxy;
 };

@@ -60,79 +60,79 @@ END_MESSAGE_MAP()
 wstring g_strCode;
 LRESULT CPaypayDlg::OnRecvUsermsg(WPARAM wParam, LPARAM lParam)
 {
-	string strHtml = *((string*)wParam);
-	//run_time_ie->DestroyWindow();
-	//delete run_time_ie;
-	//run_time_ie = new CExplorer1;
-	//
-	//RECT rect;
-	//GetClientRect(&rect);
-	//HRESULT hr = run_time_ie->Create(L"aa", WS_CHILD | WS_VISIBLE, rect, this, 20);
-	//run_time_ie->Navigate(L"about:blank", NULL, NULL, NULL, NULL);
-	//m_iee.Navigate(L"about:blank", NULL, NULL, NULL, NULL);
-	//CComQIPtr<IHTMLDocument2> spDoc = run_time_ie->get_Document();
-	//g_pStream->Release();
-	//CoMarshalInterThreadInterfaceInStream(IID_IHTMLDocument2, spDoc, &g_pStream);
-	//return 0;
-	try
-	{
-		wstring kj = wstring(strHtml.begin(), strHtml.end());
-		CComQIPtr<IHTMLDocument2> spDoc = m_iee.get_Document();
-		if (spDoc)  //运行js脚本获取post数据
-		{
-			SAFEARRAY* psa = SafeArrayCreateVector(VT_VARIANT, 0, 1);
-			VARIANT *param;
-			bstr_t bsData = (LPCTSTR)(kj.c_str());
-			//bstr_t bsData = (LPCTSTR)(StringToWString(kj)).c_str();
-			HRESULT hr = SafeArrayAccessData(psa, (LPVOID*)&param);
-			if (hr != S_OK || param == NULL)
-			{
-				return 0;
-			}
-			param->vt = VT_BSTR;
-			param->bstrVal = (BSTR)bsData;
-			SafeArrayUnaccessData(psa);
-			hr = spDoc->write(psa);
-			spDoc->close();
-			SafeArrayDestroy(psa);
-			SysFreeString(bsData);
+	//string strHtml = *((string*)wParam);
+	////run_time_ie->DestroyWindow();
+	////delete run_time_ie;
+	////run_time_ie = new CExplorer1;
+	////
+	////RECT rect;
+	////GetClientRect(&rect);
+	////HRESULT hr = run_time_ie->Create(L"aa", WS_CHILD | WS_VISIBLE, rect, this, 20);
+	////run_time_ie->Navigate(L"about:blank", NULL, NULL, NULL, NULL);
+	////m_iee.Navigate(L"about:blank", NULL, NULL, NULL, NULL);
+	////CComQIPtr<IHTMLDocument2> spDoc = run_time_ie->get_Document();
+	////g_pStream->Release();
+	////CoMarshalInterThreadInterfaceInStream(IID_IHTMLDocument2, spDoc, &g_pStream);
+	////return 0;
+	//try
+	//{
+	//	wstring kj = wstring(strHtml.begin(), strHtml.end());
+	//	CComQIPtr<IHTMLDocument2> spDoc = m_iee.get_Document();
+	//	if (spDoc)  //运行js脚本获取post数据
+	//	{
+	//		SAFEARRAY* psa = SafeArrayCreateVector(VT_VARIANT, 0, 1);
+	//		VARIANT *param;
+	//		bstr_t bsData = (LPCTSTR)(kj.c_str());
+	//		//bstr_t bsData = (LPCTSTR)(StringToWString(kj)).c_str();
+	//		HRESULT hr = SafeArrayAccessData(psa, (LPVOID*)&param);
+	//		if (hr != S_OK || param == NULL)
+	//		{
+	//			return 0;
+	//		}
+	//		param->vt = VT_BSTR;
+	//		param->bstrVal = (BSTR)bsData;
+	//		SafeArrayUnaccessData(psa);
+	//		hr = spDoc->write(psa);
+	//		spDoc->close();
+	//		SafeArrayDestroy(psa);
+	//		SysFreeString(bsData);
 
-			IHTMLElement*   pElement;
-			hr = spDoc->get_body(&pElement);
-			if (hr != S_OK || pElement == NULL)
-			{
-				return 0;
-			}
+	//		IHTMLElement*   pElement;
+	//		hr = spDoc->get_body(&pElement);
+	//		if (hr != S_OK || pElement == NULL)
+	//		{
+	//			return 0;
+	//		}
 
-			BSTR bs = SysAllocString(L"");
-			hr = pElement->get_innerText(&bs);
-			if (hr != S_OK)
-			{
-				pElement->Release();
-				SysFreeString(bs);
-				return 0;
-			}
-			if (bs == NULL)
-			{
-				pElement->Release();
-				return 0;
-			}
-			pElement->Release();
-			g_strCode = bs;
-			SysFreeString(bs);
-		}
-		else
-		{
-			return 0;
-		}
-		return 1;
-	}
-	catch (...)
-	{
-		return 0;
-	}
+	//		BSTR bs = SysAllocString(L"");
+	//		hr = pElement->get_innerText(&bs);
+	//		if (hr != S_OK)
+	//		{
+	//			pElement->Release();
+	//			SysFreeString(bs);
+	//			return 0;
+	//		}
+	//		if (bs == NULL)
+	//		{
+	//			pElement->Release();
+	//			return 0;
+	//		}
+	//		pElement->Release();
+	//		g_strCode = bs;
+	//		SysFreeString(bs);
+	//	}
+	//	else
+	//	{
+	//		return 0;
+	//	}
+	//	return 1;
+	//}
+	//catch (...)
+	//{
+	//	return 0;
+	//}
 
-	
+	return 0;
 }
 
 
@@ -355,8 +355,8 @@ int CPaypayDlg::Login2(string username, string password, wstring proxy, wstring 
 	
 		pBuff = (PBYTE)WinClient.m_pResponse;
 		zdata = WinClient.m_responseByteCountReceived;
-		ndata = zdata*20;
-		pBuff_o = (PBYTE)malloc(zdata*20);
+		ndata = zdata*10;
+		pBuff_o = (PBYTE)malloc(zdata*10);
 		if(pBuff_o)
 		{
 			memset(pBuff_o, NULL, ndata);
@@ -366,6 +366,7 @@ int CPaypayDlg::Login2(string username, string password, wstring proxy, wstring 
 			os << pBuff_o;
 			shttpResponseContent.clear();
 			shttpResponseContent = os.str();
+			free(pBuff_o);
 		}
 		else
 		{
@@ -375,9 +376,11 @@ int CPaypayDlg::Login2(string username, string password, wstring proxy, wstring 
 		if (shttpResponseContent.length() >= 1024)
 		{
 			string a=shttpResponseContent.substr(shttpResponseContent.length()-10,10);
-			if (a.find("</html>") < 0)
+			string str1 = "</html>";
+			string::size_type idx = a.find(str1);
+			if (idx == string::npos)
 			{ 
-				return LOGIN_ERROR_CONNECT;
+				return LOGIN_ERROR_CONNECT;    //没有找到
 			}
 		}
 		else
@@ -444,9 +447,11 @@ LONG ApplicationCrashHandler(EXCEPTION_POINTERS *pException)
 	GetModuleFileName(AfxGetApp()->m_hInstance, szPath, sizeof(szPath));
 	szCmdLine = GetCommandLine();
 	GetStartupInfo(&startup);
-	BOOL   bSucc = CreateProcess(szPath, L"chongqi", NULL, NULL,
-		FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &startup, &info);
-	ExitProcess(-1);
+//	BOOL   bSucc = CreateProcess(szPath, L"chongqi", NULL, NULL,
+//		FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &startup, &info);
+//	ExitProcess(-1);
+
+
 	// 这里弹出一个错误对话框并退出程序
 	//
 	CreateDumpFile(_T("paypay.dmp"), pException);
@@ -782,10 +787,22 @@ DWORD WINAPI execute(LPVOID lpParamter)
 				WaitForSingleObject(cookieMutex, INFINITE);
 				if (CookieProcess::proxyCookieQueue.size() > 0)
 				{
-					if (CookieProcess::proxyCookieQueue.front().cookie == pc.cookie)
+					int i = CookieProcess::proxyCookieQueue.size();
+					while (i > 0)
 					{
-						CookieProcess::proxyCookieQueue.pop();
+						ProxyCookie fr = CookieProcess::proxyCookieQueue.front();
+						if (fr.cookie == pc.cookie)
+						{
+							CookieProcess::proxyCookieQueue.pop_front();
+						}
+						else
+						{
+							CookieProcess::proxyCookieQueue.push_back(fr);
+							CookieProcess::proxyCookieQueue.pop_front();
+						}
+						i--;
 					}
+				
 				}
 				ReleaseMutex(cookieMutex);
 			}
@@ -820,9 +837,27 @@ DWORD WINAPI execute(LPVOID lpParamter)
 				WaitForSingleObject(cookieMutex, INFINITE);
 				if (CookieProcess::proxyCookieQueue.size() > 0)
 				{
-					ProxyCookie fr = CookieProcess::proxyCookieQueue.front();
-					CookieProcess::proxyCookieQueue.push(fr);
-					CookieProcess::proxyCookieQueue.pop();
+					int i = CookieProcess::proxyCookieQueue.size();
+					ProxyCookie bak;
+					bak.cookie = L""; bak.proxy = L"";
+					while (i > 0)
+					{
+						ProxyCookie fr = CookieProcess::proxyCookieQueue.front();
+						if (fr.cookie != pc.cookie)
+						{
+							CookieProcess::proxyCookieQueue.push_back(fr);
+						}
+						else
+						{
+							bak.cookie = fr.cookie; bak.proxy = fr.proxy;
+						}
+						CookieProcess::proxyCookieQueue.pop_front();
+						i--;
+					}
+					if (bak.cookie != L"")
+					{
+						CookieProcess::proxyCookieQueue.push_back(bak);
+					}	
 				}
 				ReleaseMutex(cookieMutex);
 				//CookieProcess::proxyCookieQueue.pop();
