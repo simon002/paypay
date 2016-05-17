@@ -85,10 +85,19 @@ bool CookieProcess::disableConnectionProxy()
 void CookieProcess::visitExplorerByProxy()  //通过代理访问
 {
 	//setConnectionOptions(L"202.100.167.182:80");
-	setConnectionOptions(m_proxy_address.c_str());
-	CString str;
-	str = "https://connect.secure.wellsfargo.com/auth/login/do";
-	m_explorer->Navigate(str, NULL, NULL, NULL, NULL);
+	try
+	{
+		setConnectionOptions(m_proxy_address.c_str());
+		CString str;
+		str = "https://connect.secure.wellsfargo.com/auth/login/do";
+		m_explorer->Navigate(str, NULL, NULL, NULL, NULL);
+	}
+	catch (...)
+	{
+		
+	}
+
+
 }
 
 void CookieProcess::setPayDlg(CPaypayDlg* _payDlg)
@@ -201,14 +210,23 @@ DWORD WINAPI cookieProcessThread(LPVOID lpParamter)
 			WaitForSingleObject(hMutex, INFINITE);
 			if (cookieProcess->getUseProxy().size() > 0)
 			{
-				std::wstring proxy = cookieProcess->getUseProxy().front();
-				std::wstring msg = L"通过代理" + proxy + L"cookie";
-				cookieProcess->getPayDlg()->addLogMsg(proxy.c_str());
-				cookieProcess->getUseProxy().pop_front();
-				cookieProcess->setProxy(const_cast<LPWSTR>(proxy.c_str()));
-				cookieProcess->setCanVisit(false);
-				cookieProcess->visitExplorerByProxy();
-				start = GetTickCount();
+				try
+				{
+					std::wstring proxy = cookieProcess->getUseProxy().front();
+					std::wstring msg = L"通过代理" + proxy + L"cookie";
+					cookieProcess->getPayDlg()->addLogMsg(proxy.c_str());
+					cookieProcess->getUseProxy().pop_front();
+					cookieProcess->setProxy(const_cast<LPWSTR>(proxy.c_str()));
+					cookieProcess->setCanVisit(false);
+					cookieProcess->visitExplorerByProxy();
+					start = GetTickCount();
+				}
+				catch (...)
+				{
+					cookieProcess->setCanVisit(true);
+				}
+
+
 			}
 			ReleaseMutex(hMutex);
 

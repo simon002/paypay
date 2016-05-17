@@ -290,6 +290,7 @@ enum CONNECT_RETURN
 	LOGIN_ERROR_HASMONEY,  //有余额
 	LOGIN_ERROR_NOMONEY,   //没有余额
 	LOGIN_ERROR_COOKIE,     //cookie过期,重新获取cookie
+	LOGIN_ERROR_CAN_NOT_LOGIN,
 };
 HANDLE hMutex;
 wstring g_rk_name;
@@ -400,7 +401,11 @@ int CPaypayDlg::Login2(string username, string password, wstring proxy, wstring 
 		{
 			return LOGIN_ERROR_COOKIE;
 		}
-
+		else if (((int)shttpResponseContent.find("Online access is currently unavailable")) > 0)
+		{
+			return LOGIN_ERROR_CAN_NOT_LOGIN;
+		}
+#ifdef XM_DEBUG
 		TCHAR szFilePath[MAX_PATH + 1]={0};
 		GetModuleFileName(NULL, szFilePath, MAX_PATH);
 		(_tcsrchr(szFilePath, _T('\\')))[1] = 0;
@@ -411,7 +416,7 @@ int CPaypayDlg::Login2(string username, string password, wstring proxy, wstring 
 		string dd = shttpResponseContent;
 		outfile<<dd;
 		outfile.close();
-
+#endif
 		return LOGIN_ERROR_SUCCESS;
 }
 // 创建Dump文件
@@ -677,7 +682,7 @@ void   ReStart(BOOL   bNormal)
 
 }
 
-wstring g_name[13] = {
+wstring g_name[14] = {
 	L"网络异常，可能是代理不能用，可能是网络连接失败",
 	L"验证码识别失败",	    //验证码识别失败
 	L"代理不可用",      //代理不可用
@@ -691,6 +696,7 @@ wstring g_name[13] = {
 	L"有余额",
 	L"没有余额",
 	L"cookie不可用",
+	L"无法登陆",
 };
 DWORD WINAPI execute(LPVOID lpParamter)
 {
@@ -772,6 +778,7 @@ DWORD WINAPI execute(LPVOID lpParamter)
 				type == LOGIN_ERROR_SUCCESS_ACTIVATE || 
 				type == LOGIN_ERROR_SUCCESS_LIMIT || 
 				type == LOGIN_ERROR_HASMONEY ||
+				type == LOGIN_ERROR_CAN_NOT_LOGIN ||
 				type == LOGIN_ERROR_NOMONEY)
 			{
 				g_ok_account_num++;
@@ -899,7 +906,8 @@ DWORD WINAPI execute(LPVOID lpParamter)
 			itoa(type, t, 10);
 			string kke = string(t);
 			wstring etr = g_name[type];
-			string data = name + "\t" + password + "\t" + returnstr;
+			//string data = name + "\t" + password + "\t" + returnstr;
+			string data = name + "     " + password;
 			setlocale(LC_ALL, "chs");
 			WaitForSingleObject(hMutex, INFINITE);
 			if (type != 0 && type != 1 && type != 2 && type != LOGIN_ERROR_COOKIE)
@@ -1162,7 +1170,7 @@ DWORD WINAPI execute_daili(LPVOID lpParamter)
 	{
 		return 0;
 	}
-	((CPaypayDlg*)lpParamter)->m_cookieProcess.doPorxyCheck();
+	
 	//hMutex = CreateMutex(NULL, FALSE, NULL);
 	CString temp_thread_num;
 	((CPaypayDlg*)lpParamter)->m_thread_input_num.GetWindowText(temp_thread_num);
@@ -1208,7 +1216,7 @@ DWORD WINAPI execute_daili(LPVOID lpParamter)
 	((CPaypayDlg*)lpParamter)->GetDlgItem(IDC_BUTTON2)->EnableWindow(false);
 	((CPaypayDlg*)lpParamter)->GetDlgItem(IDC_BUTTON3)->EnableWindow(true);
 	((CPaypayDlg*)lpParamter)->m_list_box.ResetContent();
-	
+	((CPaypayDlg*)lpParamter)->m_cookieProcess.doPorxyCheck();
 	while (!file_stream.eof() )  
 	{  
 		string name,password;
@@ -1290,6 +1298,7 @@ DWORD WINAPI execute_daili(LPVOID lpParamter)
 		//}
 
 	}
+	
 	g_has_saomiao = has_saomiao.size();
 	g_has_saomiao_used_time_num = 0;
 	((CPaypayDlg*)lpParamter)->m_progress.SetPos(has_saomiao.size());
