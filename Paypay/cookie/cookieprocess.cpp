@@ -3,6 +3,7 @@
 #include <WinInet.h>
 #include <ATLBASE.H>
 #include <mshtml.h>
+#define WM_MY_OWN_MSG WM_USER + 100
 
 #include "../WinHttpClient/WinHttpClient.h"
 #include "cookieprocess.h"
@@ -81,16 +82,20 @@ bool CookieProcess::disableConnectionProxy()
 	InternetSetOption(NULL, INTERNET_OPTION_REFRESH , NULL, 0);  
 	return TRUE;
 }
-
+#define WM_MY_OWN_MSG WM_USER + 100
 void CookieProcess::visitExplorerByProxy()  //通过代理访问
 {
 	//setConnectionOptions(L"202.100.167.182:80");
 	try
 	{
-		setConnectionOptions(m_proxy_address.c_str());
-		CString str;
-		str = "https://connect.secure.wellsfargo.com/auth/login/do";
-		m_explorer->Navigate(str, NULL, NULL, NULL, NULL);
+//		setConnectionOptions(m_proxy_address.c_str());
+//		CString str;
+//		str = "https://connect.secure.wellsfargo.com/auth/login/do";
+//		m_explorer->Navigate(str, NULL, NULL, NULL, NULL);
+
+		wstring s = m_proxy_address;	
+		SendMessage(getPayDlg()->GetSafeHwnd(), WM_MY_OWN_MSG, (WPARAM)&s, NULL);
+
 	}
 	catch (...)
 	{
@@ -113,14 +118,12 @@ void CookieProcess::visitExplorerCallBack(LPDISPATCH pDisp, VARIANT FAR* URL)
 {
 
 
-
+	try
+	{
 	CString strUrl(URL->bstrVal);
 	if(strUrl!="https://connect.secure.wellsfargo.com/auth/login/present?origin=cob" && 
 		strUrl != "https://connect.secure.wellsfargo.com/auth/login/do")
 		return;
-
-	try
-	{
 	IHTMLDocument2   *objDocument=NULL;
 	CComPtr<IHTMLElement> m_pBody;
 	CComBSTR bstrHTMLText;
@@ -219,6 +222,7 @@ DWORD WINAPI cookieProcessThread(LPVOID lpParamter)
 					cookieProcess->setProxy(const_cast<LPWSTR>(proxy.c_str()));
 					cookieProcess->setCanVisit(false);
 					cookieProcess->visitExplorerByProxy();
+					Sleep(5000);
 					start = GetTickCount();
 				}
 				catch (...)
@@ -231,12 +235,16 @@ DWORD WINAPI cookieProcessThread(LPVOID lpParamter)
 			ReleaseMutex(hMutex);
 
 		}
+		else
+		{
+			Sleep(3000);
+		}
 		end = GetTickCount();
 		if (end - start > 2*60*1000)
 		{
 			cookieProcess->setCanVisit(true);
 		}
-		Sleep(1000);
+		Sleep(2000);
 	}
 	return 1;
 }
@@ -257,13 +265,14 @@ DWORD WINAPI proxyProcessThread(LPVOID lpParamter)
 	while(true)
 	{
 		CookieProcess* cookieProcess = (CookieProcess*)lpParamter;
+		WaitForSingleObject(hMutex, INFINITE);
 		if (g_proxy_index >= g_all_daili.size())
 		{
 			Sleep(3000);
 			g_proxy_index = 0;
+			ReleaseMutex(hMutex);
 			continue;
 		}
-		WaitForSingleObject(hMutex, INFINITE);
 		std::wstring proxy = g_all_daili[g_proxy_index];
 		g_proxy_index++;
 		if (g_proxy_index >= g_all_daili.size())

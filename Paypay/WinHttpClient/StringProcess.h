@@ -16,6 +16,7 @@
 #include <atlcomtime.h>
 #pragma warning(pop)
 using namespace std;
+#include <wincrypt.h>
 
 inline wstring Trim(const wstring &source, const wstring &targets)
 {
