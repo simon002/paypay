@@ -7,6 +7,7 @@
 #include "Wincrypt.h"
 #include "windows.h"
 #include <string>
+#include <list>
 #include <map>
 #include <vector>
 #include <iostream> 
@@ -67,7 +68,7 @@ public:
 	LRESULT OnRecvUsermsg(WPARAM wParam, LPARAM lParam);
 public:
 	
-	vector<my_struct> m_all_name_password;
+	list<my_struct> m_all_name_password;
 	//std::map <std::string,std::string> m_all_name_password;//缓存所有数据
 	unsigned int                       m_thread_num;//线程数
 public:

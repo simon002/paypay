@@ -730,8 +730,8 @@ DWORD WINAPI execute(LPVOID lpParamter)
 		}
 		ReleaseMutex(cookieMutex);
 		WaitForSingleObject(hMutex, INFINITE);
-		vector<my_struct> *par = &((CPaypayDlg*)lpParamter)->m_all_name_password;
-		vector<my_struct>::iterator iter;
+		list<my_struct> *par = &((CPaypayDlg*)lpParamter)->m_all_name_password;
+		list<my_struct>::iterator iter;
 		if (par->size() > 0)
 		{
 				if (type != 0 && type != 1 && type != 2 && type != LOGIN_ERROR_COOKIE)
@@ -744,6 +744,7 @@ DWORD WINAPI execute(LPVOID lpParamter)
 		}
 		else if (type != 0 && type != 1 && type != 2 && type != LOGIN_ERROR_COOKIE)
 		{
+			ReleaseMutex(hMutex);
 			break;
 		}
 		ReleaseMutex(hMutex);
@@ -1281,7 +1282,7 @@ DWORD WINAPI execute_daili(LPVOID lpParamter)
 		vector<my_struct>::iterator iter = has_saomiao.begin();
 		for ( ;iter != has_saomiao.end(); ++iter)
 		{
-			vector<my_struct>::iterator result = find(((CPaypayDlg*)lpParamter)->m_all_name_password.begin(), ((CPaypayDlg*)lpParamter)->m_all_name_password.end(), *iter);
+			list<my_struct>::iterator result = find(((CPaypayDlg*)lpParamter)->m_all_name_password.begin(), ((CPaypayDlg*)lpParamter)->m_all_name_password.end(), *iter);
 			if( result != ((CPaypayDlg*)lpParamter)->m_all_name_password.end())
 			{
 				wstring me_name = wstring(result->name.begin(), result->name.end());
