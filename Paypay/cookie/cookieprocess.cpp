@@ -15,13 +15,19 @@ extern std::vector<std::wstring> g_all_daili;
 std::deque<ProxyCookie> CookieProcess::proxyCookieQueue;
 CookieProcess::CookieProcess():
 m_can_visit(true),
-m_first(true)
+m_first(true),
+m_tag(0)
 { 
 }
 
 CookieProcess::~CookieProcess()
 {
 
+}
+
+void CookieProcess::setTag(int _tag)
+{
+	m_tag = _tag;
 }
 
 void CookieProcess::setProxy(std::wstring _proxy_address)
@@ -94,7 +100,7 @@ void CookieProcess::visitExplorerByProxy()  //通过代理访问
 //		m_explorer->Navigate(str, NULL, NULL, NULL, NULL);
 
 		wstring s = m_proxy_address;	
-		SendMessage(getPayDlg()->GetSafeHwnd(), WM_MY_OWN_MSG, (WPARAM)&s, NULL);
+		SendMessage(getPayDlg()->GetSafeHwnd(), WM_MY_OWN_MSG, (WPARAM)&s, (LPARAM)&m_tag);
 
 	}
 	catch (...)

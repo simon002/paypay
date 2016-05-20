@@ -96,6 +96,9 @@ public:
 	afx_msg void OnBnClickedCheck4();
 	CEdit m_chongqi;
 	CookieProcess m_cookieProcess;
+	CookieProcess m_cookieProcess_1;
 	DECLARE_EVENTSINK_MAP()
 	void DocumentCompleteExplorer1(LPDISPATCH pDisp, VARIANT* URL);
+	CExplorer1 m_ie_1;
+	void DocumentCompleteExplorer2(LPDISPATCH pDisp, VARIANT* URL);
 };
