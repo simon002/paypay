@@ -30,13 +30,16 @@ public:
 	void setPayDlg(CPaypayDlg* _payDlg);
 	void stopAllThread();
 	CPaypayDlg* getPayDlg();
+	void setTag(int _tag);
 	static std::deque<ProxyCookie> proxyCookieQueue;
-private:
+	static std::deque<std::wstring> m_can_use_proxy;
+public:
 	CExplorer1* m_explorer;
 	CString m_cookie;
 	std::wstring m_proxy_address;
 	bool m_can_visit;
 	bool m_first;
+	int  m_tag;
 	CPaypayDlg* m_payDlg;
-	std::deque<std::wstring> m_can_use_proxy;
+	
 };
