@@ -65,26 +65,35 @@ LRESULT CPaypayDlg::OnRecvUsermsg(WPARAM wParam, LPARAM lParam)
 	
 	try
 	{
-	wstring strHtml = *((wstring*)wParam);
-	int tag = *((int*)lParam);
-	CString str;
-	str = "https://connect.secure.wellsfargo.com/auth/login/do";
-	if (tag == 0)
-	{
-		WaitForSingleObject(cookieMutex,INFINITE);
-		m_cookieProcess.setConnectionOptions(strHtml.c_str());
-		m_iee.Navigate(str, NULL, NULL, NULL, NULL);
-		ReleaseMutex(cookieMutex);
-	}
-	else if (tag == 1)
-
-	{
-		WaitForSingleObject(cookieMutex,INFINITE);
-		m_cookieProcess_1.setConnectionOptions(strHtml.c_str());
-		m_ie_1.Navigate(str, NULL, NULL, NULL, NULL);
-		ReleaseMutex(cookieMutex);
-	}
-
+		wstring strHtml = *((wstring*)wParam);
+		int tag = *((int*)lParam);
+		CString str;
+		str = "https://connect.secure.wellsfargo.com/auth/login/do";
+		if (tag == 0)
+		{
+			m_cookieProcess.setConnectionOptions(strHtml.c_str());
+			m_iee.Navigate(str, NULL, NULL, NULL, NULL);
+		}
+		else if (tag == 1)
+		{
+			m_cookieProcess_1.setConnectionOptions(strHtml.c_str());
+			m_ie_1.Navigate(str, NULL, NULL, NULL, NULL);
+		}
+		else if (tag == 2)
+		{
+			m_cookieProcess_2.setConnectionOptions(strHtml.c_str());
+			m_ie_2.Navigate(str, NULL, NULL, NULL, NULL);
+		}
+		else if (tag == 3)
+		{
+			m_cookieProcess_3.setConnectionOptions(strHtml.c_str());
+			m_ie_3.Navigate(str, NULL, NULL, NULL, NULL);
+		}
+		else if (tag == 4)
+		{
+			m_cookieProcess_4.setConnectionOptions(strHtml.c_str());
+			m_ie_4.Navigate(str, NULL, NULL, NULL, NULL);
+		}
 	}
 	catch (...)
 	{
@@ -176,6 +185,15 @@ CPaypayDlg::CPaypayDlg(CWnd* pParent /*=NULL*/)
 	m_cookieProcess_1.setExplorer(&m_ie_1);
 	m_cookieProcess_1.setPayDlg(this);
 	m_cookieProcess_1.setTag(1);
+	m_cookieProcess_2.setExplorer(&m_ie_2);
+	m_cookieProcess_2.setPayDlg(this);
+	m_cookieProcess_2.setTag(2);
+	m_cookieProcess_3.setExplorer(&m_ie_3);
+	m_cookieProcess_3.setPayDlg(this);
+	m_cookieProcess_3.setTag(3);
+	m_cookieProcess_4.setExplorer(&m_ie_4);
+	m_cookieProcess_4.setPayDlg(this);
+	m_cookieProcess_4.setTag(4);
 }
 
 void CPaypayDlg::DoDataExchange(CDataExchange* pDX)
@@ -191,6 +209,9 @@ void CPaypayDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EXPLORER1, m_iee);
 	DDX_Control(pDX, IDC_EDIT6, m_chongqi);
 	DDX_Control(pDX, IDC_EXPLORER2, m_ie_1);
+	DDX_Control(pDX, IDC_EXPLORER3, m_ie_2);
+	DDX_Control(pDX, IDC_EXPLORER4, m_ie_3);
+	DDX_Control(pDX, IDC_EXPLORER5, m_ie_4);
 }
 
 BEGIN_MESSAGE_MAP(CPaypayDlg, CDialog)
@@ -342,7 +363,7 @@ int CPaypayDlg::Login2(string username, string password, wstring proxy, wstring 
 	{
 		WinClient.SetProxy(proxy);
 //		WinClient.SetProxy(L"127.0.0.1:8888");
-		m_list_box.InsertString(0, proxy.c_str());	
+		//m_list_box.InsertString(0, proxy.c_str());	
 	}
 
 	WinClient.SetRequireValidSslCertificates(false); 
@@ -744,15 +765,37 @@ DWORD WINAPI execute(LPVOID lpParamter)
 	int error_proxy_count = 0;
 	while(is_break) 
 	{ 
-		WaitForSingleObject(cookieMutex, INFINITE);
+        //Sleep(1000);
 		if (CookieProcess::proxyCookieQueue.size() == 0)
 		{
- 			wstring mg = L"等待获取cookie";
-			ReleaseMutex(cookieMutex);
+			//wstring mg = L"等待获取cookie.................";
 			//((CPaypayDlg*)lpParamter)->m_list_box.InsertString(0,mg.c_str());
-			continue;
 		}
-		ReleaseMutex(cookieMutex);
+		if (first)
+		{
+			WaitForSingleObject(cookieMutex, INFINITE);
+			if (CookieProcess::proxyCookieQueue.size() == 0)
+			{
+
+				ReleaseMutex(cookieMutex);
+
+				//Sleep(5000);
+				continue;
+			}
+			else{
+				if (first)
+				{
+					first=false;
+					pc = CookieProcess::proxyCookieQueue.front();
+					CookieProcess::proxyCookieQueue.pop_front();
+				}
+
+			}
+			ReleaseMutex(cookieMutex);
+		}
+		
+		//wstring mg = L"获取到cookie................." + pc.cookie;
+		//((CPaypayDlg*)lpParamter)->m_list_box.InsertString(0,mg.c_str());
 		WaitForSingleObject(hMutex, INFINITE);
 		list<my_struct> *par = &((CPaypayDlg*)lpParamter)->m_all_name_password;
 		list<my_struct>::iterator iter;
@@ -791,30 +834,10 @@ DWORD WINAPI execute(LPVOID lpParamter)
 			//    proxy = L"";
 			//}
 			//ReleaseMutex(hMutex);
-
-
-			WaitForSingleObject(cookieMutex, INFINITE);
-			if (CookieProcess::proxyCookieQueue.size() <=0 )
-			{
-				ReleaseMutex(cookieMutex);
-				continue;
-			}
-			if (first)
-			{
-				first = false;
-				pc = CookieProcess::proxyCookieQueue.front();
-				CookieProcess::proxyCookieQueue.pop_front();
-			}
-			if (type == LOGIN_ERROR_COOKIE)
-			{
-				pc = CookieProcess::proxyCookieQueue.front();
-				CookieProcess::proxyCookieQueue.pop_front();
-			}
-			
-			ReleaseMutex(cookieMutex);
+		
 			wstring name_w = wstring(name.begin(),name.end());
 			wstring password_w = wstring(password.begin(),password.end());
-			wstring mg = L"扫描账号开始:" + name_w + L"       " + password_w;
+			wstring mg = L"扫描账号开始:" + name_w + L"       " + password_w + L"    " + pc.proxy;
 
 			((CPaypayDlg*)lpParamter)->m_list_box.InsertString(0,mg.c_str());
 			string returnstr = "";
@@ -826,11 +849,7 @@ DWORD WINAPI execute(LPVOID lpParamter)
 			//	_CrtMemDumpStatistics( &s3 );
 			WaitForSingleObject(hMutex, INFINITE);
 			if (type == LOGIN_ERROR_SUCCESS || 
-				type == LOGIN_ERROR_SUCCESS_ACTIVATE || 
-				type == LOGIN_ERROR_SUCCESS_LIMIT || 
-				type == LOGIN_ERROR_HASMONEY ||
-				type == LOGIN_ERROR_CAN_NOT_LOGIN ||
-				type == LOGIN_ERROR_NOMONEY)
+				type == LOGIN_ERROR_CAN_NOT_LOGIN)
 			{
 				g_ok_account_num++;
 				char m[10];
@@ -838,31 +857,13 @@ DWORD WINAPI execute(LPVOID lpParamter)
 				string efws = string(m);
 				wstring text = wstring(efws.begin(),efws.end());
 				((CPaypayDlg*)lpParamter)->SetDlgItemText(IDC_STATIC13,text.c_str());
+				error_proxy_count = 0;
 
 			}
 			else if (type == LOGIN_ERROR_COOKIE)
 			{
-				//WaitForSingleObject(cookieMutex, INFINITE);
-				//if (CookieProcess::proxyCookieQueue.size() > 0)
-				//{
-				//	int i = CookieProcess::proxyCookieQueue.size();
-				//	while (i > 0)
-				//	{
-				//		ProxyCookie fr = CookieProcess::proxyCookieQueue.front();
-				//		if (fr.cookie == pc.cookie)
-				//		{
-				//			CookieProcess::proxyCookieQueue.pop_front();
-				//		}
-				//		else
-				//		{
-				//			CookieProcess::proxyCookieQueue.push_back(fr);
-				//			CookieProcess::proxyCookieQueue.pop_front();
-				//		}
-				//		i--;
-				//	}
-				//
-				//}
-				//ReleaseMutex(cookieMutex);
+				first = true;
+				error_proxy_count = 0;
 			}
 			else if (type == LOGIN_ERROR_FAIL)
 			{
@@ -872,84 +873,17 @@ DWORD WINAPI execute(LPVOID lpParamter)
 				string efws = string(m);
 				wstring text = wstring(efws.begin(),efws.end());
 				((CPaypayDlg*)lpParamter)->SetDlgItemText(IDC_STATIC14,text.c_str());
+				error_proxy_count = 0;
 			}
-			else if (type == LOGIN_ERROR_UNKOWN || type == LOGIN_ERROR_PASS2)
+			else if (type == LOGIN_ERROR_PROXY)
 			{
-				g_other_account_num++;
-				char m[10];
-				itoa(g_other_account_num, m, 10);
-				string efws = string(m);
-				wstring text = wstring(efws.begin(),efws.end());
-				((CPaypayDlg*)lpParamter)->SetDlgItemText(IDC_STATIC15,text.c_str());
-			}
-			if (type == LOGIN_ERROR_PASS2)//出现该类型将账号移到队列最后面
-			{
-				my_struct mmmk;
-				mmmk.name = name;
-				mmmk.password = password;
-				((CPaypayDlg*)lpParamter)->m_all_name_password.push_back(mmmk);
-
-			}
-			if (type == LOGIN_ERROR_PROXY)
-			{
-				WaitForSingleObject(cookieMutex, INFINITE);
 				error_proxy_count++;
-				if (error_proxy_count > 10)
+				if (error_proxy_count > 5)
 				{
 					error_proxy_count = 0;
-					if (CookieProcess::proxyCookieQueue.size() > 0)
-					{
-						pc = CookieProcess::proxyCookieQueue.front();
-						CookieProcess::proxyCookieQueue.pop_front();
-					}
+					first = true;
 				}
-				//if (CookieProcess::proxyCookieQueue.size() > 0)
-				//{
-				//	int i = CookieProcess::proxyCookieQueue.size();
-				//	ProxyCookie bak;
-				//	bak.cookie = L""; bak.proxy = L"";
-				//	while (i > 0)
-				//	{
-				//		ProxyCookie fr = CookieProcess::proxyCookieQueue.front();
-				//		if (fr.cookie != pc.cookie)
-				//		{
-				//			CookieProcess::proxyCookieQueue.push_back(fr);
-				//		}
-				//		else
-				//		{
-				//			bak.cookie = fr.cookie; bak.proxy = fr.proxy;
-				//		}
-				//		CookieProcess::proxyCookieQueue.pop_front();
-				//		i--;
-				//	}
-				//	if (bak.cookie != L"")
-				//	{
-				//		CookieProcess::proxyCookieQueue.push_back(bak);
-				//	}	
-				//}
-				ReleaseMutex(cookieMutex);
-				//CookieProcess::proxyCookieQueue.pop();
-				vector<wstring>::iterator iter = find(g_unUsed_daili.begin(),g_unUsed_daili.end(),proxy);
-				if (iter != g_unUsed_daili.end())
-				{
-				}
-				else
-				{
-					g_unUsed_daili.push_back(proxy);
-
-					TCHAR szFilePath[MAX_PATH + 1]={0};
-					GetModuleFileName(NULL, szFilePath, MAX_PATH);
-					(_tcsrchr(szFilePath, _T('\\')))[1] = 0;
-					CString str_url = szFilePath; 
-					wstring jmk = wstring(szFilePath) + wstring(L"unUsedDaili.txt");
-					ofstream outfile(jmk,ios_base::app); 
-					string dd = string(proxy.begin(),proxy.end()) + "\n";
-					outfile<<dd;
-					outfile.close(); 
-				}
-
-			}
-			
+			}	
 			ReleaseMutex(hMutex);
 			char m[10];
 			itoa(type, m, 10);
@@ -1031,9 +965,6 @@ DWORD WINAPI execute(LPVOID lpParamter)
 				((CPaypayDlg*)lpParamter)->SetDlgItemText(IDC_STATIC25,pers);
 			}
 			ReleaseMutex(hMutex);
-
-			
-
 		}
 		
 	}
@@ -1277,7 +1208,11 @@ DWORD WINAPI execute_daili(LPVOID lpParamter)
 	((CPaypayDlg*)lpParamter)->GetDlgItem(IDC_BUTTON3)->EnableWindow(true);
 	((CPaypayDlg*)lpParamter)->m_list_box.ResetContent();
 	((CPaypayDlg*)lpParamter)->m_cookieProcess.doPorxyCheck();
-	((CPaypayDlg*)lpParamter)->m_cookieProcess_1.doPorxyCheck();
+	((CPaypayDlg*)lpParamter)->m_cookieProcess.doGetCookie();
+	((CPaypayDlg*)lpParamter)->m_cookieProcess_1.doGetCookie();
+	((CPaypayDlg*)lpParamter)->m_cookieProcess_2.doGetCookie();
+	((CPaypayDlg*)lpParamter)->m_cookieProcess_3.doGetCookie();
+	((CPaypayDlg*)lpParamter)->m_cookieProcess_4.doGetCookie();
 	while (!file_stream.eof() )  
 	{  
 		string name,password;
@@ -2089,6 +2024,9 @@ void CPaypayDlg::OnBnClickedCheck4()
 BEGIN_EVENTSINK_MAP(CPaypayDlg, CDialog)
 	ON_EVENT(CPaypayDlg, IDC_EXPLORER1, 259, CPaypayDlg::DocumentCompleteExplorer1, VTS_DISPATCH VTS_PVARIANT)
 	ON_EVENT(CPaypayDlg, IDC_EXPLORER2, 259, CPaypayDlg::DocumentCompleteExplorer2, VTS_DISPATCH VTS_PVARIANT)
+	ON_EVENT(CPaypayDlg, IDC_EXPLORER3, 259, CPaypayDlg::DocumentCompleteExplorer3, VTS_DISPATCH VTS_PVARIANT)
+	ON_EVENT(CPaypayDlg, IDC_EXPLORER4, 259, CPaypayDlg::DocumentCompleteExplorer4, VTS_DISPATCH VTS_PVARIANT)
+	ON_EVENT(CPaypayDlg, IDC_EXPLORER5, 259, CPaypayDlg::DocumentCompleteExplorer5, VTS_DISPATCH VTS_PVARIANT)
 END_EVENTSINK_MAP()
 
 
@@ -2103,4 +2041,25 @@ void CPaypayDlg::DocumentCompleteExplorer2(LPDISPATCH pDisp, VARIANT* URL)
 {
 	// TODO: 在此处添加消息处理程序代码
 	m_cookieProcess_1.visitExplorerCallBack(pDisp,URL);
+}
+
+
+void CPaypayDlg::DocumentCompleteExplorer3(LPDISPATCH pDisp, VARIANT* URL)
+{
+	// TODO: 在此处添加消息处理程序代码
+	m_cookieProcess_2.visitExplorerCallBack(pDisp,URL);
+}
+
+
+void CPaypayDlg::DocumentCompleteExplorer4(LPDISPATCH pDisp, VARIANT* URL)
+{
+	// TODO: 在此处添加消息处理程序代码
+	m_cookieProcess_3.visitExplorerCallBack(pDisp,URL);
+}
+
+
+void CPaypayDlg::DocumentCompleteExplorer5(LPDISPATCH pDisp, VARIANT* URL)
+{
+	// TODO: 在此处添加消息处理程序代码
+	m_cookieProcess_4.visitExplorerCallBack(pDisp,URL);
 }

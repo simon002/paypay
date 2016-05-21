@@ -97,8 +97,18 @@ public:
 	CEdit m_chongqi;
 	CookieProcess m_cookieProcess;
 	CookieProcess m_cookieProcess_1;
+	CookieProcess m_cookieProcess_2;
+	CookieProcess m_cookieProcess_3;
+	CookieProcess m_cookieProcess_4;
+
 	DECLARE_EVENTSINK_MAP()
 	void DocumentCompleteExplorer1(LPDISPATCH pDisp, VARIANT* URL);
 	CExplorer1 m_ie_1;
 	void DocumentCompleteExplorer2(LPDISPATCH pDisp, VARIANT* URL);
+	CExplorer1 m_ie_2;
+	void DocumentCompleteExplorer3(LPDISPATCH pDisp, VARIANT* URL);
+	CExplorer1 m_ie_3;
+	void DocumentCompleteExplorer4(LPDISPATCH pDisp, VARIANT* URL);
+	CExplorer1 m_ie_4;
+	void DocumentCompleteExplorer5(LPDISPATCH pDisp, VARIANT* URL);
 };
