@@ -109,7 +109,7 @@ void CookieProcess::visitExplorerByProxy()  //通过代理访问
 	}
 	catch (...)
 	{
-		
+		ReleaseMutex(OpenUrlMutex);	
 	}
 
 
@@ -130,7 +130,17 @@ void CookieProcess::visitExplorerCallBack(LPDISPATCH pDisp, VARIANT FAR* URL)
 
 	try
 	{
-	CString strUrl(URL->bstrVal);
+		char mmm[10];
+		itoa(m_tag, mmm, 10);
+
+		string ttt = string(mmm);
+		wstring ss = wstring(ttt.begin(),ttt.end());
+
+		CString strUrl(URL->bstrVal);
+		std::wstring msg = L"线程" + ss + L"url:" + URL->bstrVal;
+		getPayDlg()->addLogMsg(msg.c_str());
+
+	
 	if(strUrl!="https://connect.secure.wellsfargo.com/auth/login/present?origin=cob" && 
 		strUrl != "https://connect.secure.wellsfargo.com/auth/login/do")
 		return;
@@ -186,11 +196,7 @@ retry:
 	delete []lpszData; 
 	if (cookie.size() > 0 && strUrl =="https://connect.secure.wellsfargo.com/auth/login/present?origin=cob")
 	{
-		char mmm[10];
-		itoa(m_tag, mmm, 10);
-		
-		string ttt = string(mmm);
-		wstring ss = wstring(ttt.begin(),ttt.end());
+
 
 		char m[10];
 		itoa(proxyCookieQueue.size(), m, 10);
@@ -249,10 +255,11 @@ DWORD WINAPI cookieProcessThread(LPVOID lpParamter)
 					std::wstring msg = L"线程" + text + L"通过代理" + proxy + L"取cookie";
 					cookieProcess->getPayDlg()->addLogMsg(msg.c_str());
 					cookieProcess->CookieProcess::m_can_use_proxy.pop_front();
+					ReleaseMutex(cookieMutex);				
 					cookieProcess->setProxy(const_cast<LPWSTR>(proxy.c_str()));
 					cookieProcess->setCanVisit(false);
 					cookieProcess->visitExplorerByProxy();
-					Sleep(5000);
+					//Sleep(3000);
 					start = GetTickCount();
 				}
 				catch (...)
@@ -263,19 +270,23 @@ DWORD WINAPI cookieProcessThread(LPVOID lpParamter)
 
 
 			}
-			ReleaseMutex(cookieMutex);
+			else{
+				ReleaseMutex(cookieMutex);	
+				//Sleep(5000);
+			}
+		
 
 		}
 		else
 		{
-			Sleep(3000);
+			//Sleep(3000);
 		}
 		end = GetTickCount();
 		if (end - start > 2*60*1000)
 		{
 			cookieProcess->setCanVisit(true);
 		}
-		Sleep(2000);
+		//Sleep(2000);
 	}
 	return 1;
 }
@@ -301,7 +312,7 @@ DWORD WINAPI proxyProcessThread(LPVOID lpParamter)
 		{
 			g_proxy_index = 0;
 			ReleaseMutex(hMutex);
-			Sleep(3000);
+			//Sleep(3000);
 			continue;
 		}
 		std::wstring proxy = g_all_daili[g_proxy_index];

@@ -765,7 +765,7 @@ DWORD WINAPI execute(LPVOID lpParamter)
 	int error_proxy_count = 0;
 	while(is_break) 
 	{ 
-        //Sleep(1000);
+ //     Sleep(1000);
 		if (CookieProcess::proxyCookieQueue.size() == 0)
 		{
 			//wstring mg = L"等待获取cookie.................";
@@ -963,8 +963,13 @@ DWORD WINAPI execute(LPVOID lpParamter)
 				CString pers;
 				pers.Format(L"%d个",per_h);
 				((CPaypayDlg*)lpParamter)->SetDlgItemText(IDC_STATIC25,pers);
+				
+				name="";
 			}
 			ReleaseMutex(hMutex);
+		}
+		else{
+			break;
 		}
 		
 	}
@@ -1210,9 +1215,9 @@ DWORD WINAPI execute_daili(LPVOID lpParamter)
 	((CPaypayDlg*)lpParamter)->m_cookieProcess.doPorxyCheck();
 	((CPaypayDlg*)lpParamter)->m_cookieProcess.doGetCookie();
 	((CPaypayDlg*)lpParamter)->m_cookieProcess_1.doGetCookie();
-	((CPaypayDlg*)lpParamter)->m_cookieProcess_2.doGetCookie();
-	((CPaypayDlg*)lpParamter)->m_cookieProcess_3.doGetCookie();
-	((CPaypayDlg*)lpParamter)->m_cookieProcess_4.doGetCookie();
+	//((CPaypayDlg*)lpParamter)->m_cookieProcess_2.doGetCookie();
+	//((CPaypayDlg*)lpParamter)->m_cookieProcess_3.doGetCookie();
+	//((CPaypayDlg*)lpParamter)->m_cookieProcess_4.doGetCookie();
 	while (!file_stream.eof() )  
 	{  
 		string name,password;
