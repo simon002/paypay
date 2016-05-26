@@ -118,6 +118,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cookie\cookieprocess.cpp" />
+    <ClCompile Include="cookie\ftpmanager.cpp" />
     <ClCompile Include="explorer1.cpp" />
     <ClCompile Include="MyGzip.cpp" />
     <ClCompile Include="Paypay.cpp" />
@@ -130,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cookie\cookieprocess.h" />
+    <ClInclude Include="cookie\ftpmanager.h" />
     <ClInclude Include="explorer1.h" />
     <ClInclude Include="MyGzip.h" />
     <ClInclude Include="Paypay.h" />

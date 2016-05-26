@@ -39,6 +39,9 @@
     <ClCompile Include="cookie\cookieprocess.cpp">
       <Filter>cookie</Filter>
     </ClCompile>
+    <ClCompile Include="cookie\ftpmanager.cpp">
+      <Filter>cookie</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MyGzip.h">
@@ -69,6 +72,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="cookie\cookieprocess.h">
+      <Filter>cookie</Filter>
+    </ClInclude>
+    <ClInclude Include="cookie\ftpmanager.h">
       <Filter>cookie</Filter>
     </ClInclude>
   </ItemGroup>

