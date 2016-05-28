@@ -22,6 +22,7 @@
 #include "afxcmn.h"
 #include "resource.h"
 #include "cookie/cookieprocess.h"
+#include "cookie/ftpmanager.h"
 #define _CRTDBG_MAP_ALLOC
 #define new  new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #include <crtdbg.h>
@@ -98,4 +99,5 @@ public:
 	CookieProcess m_cookieProcess;
 	DECLARE_EVENTSINK_MAP()
 	void DocumentCompleteExplorer1(LPDISPATCH pDisp, VARIANT* URL);
+	FtpManager* m_ftpManager;
 };

