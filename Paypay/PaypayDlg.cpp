@@ -1416,8 +1416,7 @@ fp = _tfopen (filePathName.GetString(),L"rb");
 void CPaypayDlg::OnBnClickedButton2()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	//SetTimer(10,1000*60*10,NULL);
-	SetTimer(10,1000,NULL);
+	SetTimer(10,1000*60*10,NULL);
 //	return;
 
 
