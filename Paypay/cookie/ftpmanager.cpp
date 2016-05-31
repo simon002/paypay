@@ -38,7 +38,7 @@ int FtpManager::openConnection(wstring _server_ip)
 		// try to connect to a ftp server
 		m_pFtpConnection = m_pInternetSession->GetFtpConnection(m_server_ip.c_str(),
 		m_name.c_str(),
-		m_password.c_str());
+		m_password.c_str(),21);
 	}
 	catch (CInternetException* pEx) 
 	{
@@ -71,6 +71,30 @@ bool FtpManager::closeConnection()
 		delete m_pFtpConnection;
 
 	return 1;
+}
+
+BOOL GetInternetErrorMessage(LPTSTR lpszError, UINT nMaxError)
+{
+	CString  strerr;
+	DWORD    dwLen = 0;
+	DWORD    dwError;
+	if (!InternetGetLastResponseInfo(&dwError, NULL, &dwLen) &&
+		GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+		return FALSE;
+
+	dwLen += 2;
+
+	if (!InternetGetLastResponseInfo(&dwError, strerr.GetBuffer(dwLen + 2), &dwLen))
+	{
+		strerr.ReleaseBuffer();
+		return FALSE;
+	}
+
+	strerr.ReleaseBuffer();
+
+	_tcsncpy(lpszError, strerr, nMaxError);
+	lpszError[nMaxError - 1] = 0;
+	return TRUE;
 }
 
 int FtpManager::_downLoadFilesImp(CStringArray *remoteArray,CStringArray *localArray,int number_file)
@@ -122,6 +146,10 @@ int FtpManager::_pushFilesImp(CStringArray *remoteArray,CStringArray *localArray
 			1
 			);
 
+		//int x = GetLastError();
+		//TCHAR XXX[4096] = { 0 };
+		//GetInternetErrorMessage(XXX, 4096);
+
 		missed[x] = goodfile ? 0 : 1;
 		// if failed, missed[x] become 1
 		// if good, missed become 0
@@ -151,11 +179,22 @@ int FtpManager::pushFiles(vector<wstring>& files)
 	CStringArray local;
 	CString Error;
 
+	CString strcopyFile;
+	TCHAR tmp[255] = { 0 };
+	GetTempPath(255, tmp);
 	CTime tm;
 	tm = CTime::GetCurrentTime();
-	CString dir_name = tm.Format("%Y年%m月%d日");
+	CString dir_name = tm.Format("%Y_%m_%d_%H_%M_%S");
+	dir_name += L".txt";
 
-	TCHAR szFilePath[MAX_PATH + 1] = { 0 };
+	strcopyFile = tmp + dir_name;
+	CopyFile(files[0].c_str(), strcopyFile, FALSE);
+
+	remote.Add(dir_name);
+	local.Add(strcopyFile);
+
+
+	/*TCHAR szFilePath[MAX_PATH + 1] = { 0 };
 	GetModuleFileName(NULL, szFilePath, MAX_PATH);
 	(_tcsrchr(szFilePath, _T('\\')))[1] = 0;
 	CString str_url = szFilePath;
@@ -167,7 +206,7 @@ int FtpManager::pushFiles(vector<wstring>& files)
 		CString tempLocal = name.c_str();
 		local.Add(tempLocal);
 	}
-
+*/
 
 
 	//strUser="ABCD";           //用户名

